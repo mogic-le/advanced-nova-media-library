@@ -26,6 +26,8 @@
     <div v-if="field.showStatistics" class="type">
       {{ mimeType }}
     </div>
+    <div>{{ customProperties.caption}}</div>
+    <div>{{ customProperties.alt_text}}</div>
   </gallery-item>
 </template>
 
