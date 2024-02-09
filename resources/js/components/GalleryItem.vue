@@ -25,7 +25,8 @@
       float: left;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      margin-top: 5px;
+      /* justify-content: center; */
       position: relative;
       border-radius: $border-radius;
       background-color: $bg-color;

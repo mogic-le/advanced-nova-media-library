@@ -19,15 +19,19 @@
     </div>
     <img :src="src" :alt="image.name" ref="image" class="gallery-image">
     <div v-if="field.showStatistics" class="statistics">
-      <div v-if="size" class="size"><strong>{{ size }}</strong></div>
-      <div class="dimensions"><strong>{{ width }}×{{ height }}</strong> px</div>
-      <div class="ratio"> <strong>{{ aspectRatio }}</strong> (<i>{{ ratio }}</i>)</div>
+      <!--<div v-if="size" class="size"><strong>{{ size }}</strong></div>-->
+      <div class="dimensions"><strong>{{ width }}×{{ height }}</strong> px (<i>{{ aspectRatio }}</i>)</div>
+      <div v-if="customPropertiesFields.length > 0" class="customOver">
+                <div v-for="field in filledFields" :key="field.attribute" class="customOverItem">
+                <strong>{{ field.name }}:</strong> {{ field.value }}
+                </div>
+                </div>
     </div>
     <div v-if="field.showStatistics" class="type">
       {{ mimeType }}
     </div>
-    <div>{{ customProperties.caption}}</div>
-    <div>{{ customProperties.alt_text}}</div>
+
+
   </gallery-item>
 </template>
 
@@ -40,7 +44,7 @@
       ScissorsIcon,
       GalleryItem,
     },
-    props: ['image', 'field', 'removable', 'editable', 'isCustomPropertiesEditable'],
+    props: ['image', 'field', 'removable', 'editable', 'isCustomPropertiesEditable', 'customProperties', 'customPropertiesFields'],
     data: () => ({
       acceptedMimeTypes: ['image/jpg', 'image/jpeg', 'image/png'],
       src: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
@@ -62,6 +66,17 @@
       mimeType() {
         return this.image.mime_type || this.image.file.type;
       },
+      filledFields () {
+                      return _.cloneDeep(this.customPropertiesFields).map(field => _.tap(field, field => {
+                          field.value = this.getProperty(field.attribute)
+                          if (field.value) {
+                              field.value = field.value.substr(0, 40)
+                              if (field.value.length == 40) {
+                                  field.value = field.value + "\u2026"
+                              }
+                          }
+                      }))
+                  },
     },
     watch: {
       image: {
@@ -70,6 +85,10 @@
       }
     },
     methods: {
+    getProperty (property) {
+                    return _.get(this.image, `custom_properties.${property}`)
+                },
+
       showPreview() {
         const blobUrl = this.image.file ? URL.createObjectURL(this.image.file) : this.image.__media_urls__.preview;
         window.open(blobUrl, '_blank');
@@ -173,12 +192,12 @@
 
 <style lang="scss">
   $bg-color: #e8f5fb;
-  $item-max-size: 150px;
+  $item-max-size: 180px;
   $border-radius: 10px;
 
   .gallery {
     .gallery-item-image.gallery-item {
-      width: $item-max-size;
+      width: #{$item-max-size - 10px};
       height: $item-max-size;
 
       &:hover .gallery-item-info {
@@ -186,9 +205,9 @@
       }
 
       &.show-statistics {
-        padding-top: 15px;
+        padding-top: 25px;
         padding-bottom: 32px;
-        height: #{$item-max-size + 23px};
+        height: #{$item-max-size + 100px};
       }
 
       .gallery-item-info {
@@ -224,7 +243,8 @@
       .gallery-image {
         object-fit: contain;
         display: block;
-        max-height: 100%;
+        /* max-height: 100%; */
+        max-height: 140px;
         border-radius: $border-radius;
       }
 
@@ -238,11 +258,20 @@
         text-align: center;
       }
 
+
+
       .statistics {
         bottom: 1px;
 
         .dimensions {
           font-size: .675rem;
+        }
+        .customOver {
+          margin: 8px;
+          text-align: left;
+        }
+        .customOverItem {
+          margin-top:5px;
         }
 
         .ratio {
